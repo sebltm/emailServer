@@ -1,0 +1,15 @@
+This repo is a coursework assignment. The task was to create a basic EMail delivery service, using microservices.
+Finally, all those microservices had to be containerised using Docker.
+
+This service is made of 3 microservices:
+
+1. A Mail Submission Agent or "MSA", which acts as a client. The user interacts with this service to write emails to the
+outbox, read their entire inbox, read a single email or delete an email. The MSA also writes email to the inbox when an email
+is sent to the user. The MSA is linked to a single user, e.g: user1@domain.com
+
+2. A Message Transfer Agent or "MTA", which acts as a broker. The MTA scans each outbox in its SLD name, and send them
+to their corresponding MTA. Once an MTA receives an email, it dispatches it to the right MSA. An MTA is linked to a
+SLD name, e.g: domain.com
+
+3. A Bluebook which acts as a record of the IP address of each MTA. When an MTA sends one email to another, they first
+query the Bluebook to find the IP address of the destination MTA.
