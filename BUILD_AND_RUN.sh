@@ -41,19 +41,24 @@ docker container rm -f MSA-gracehopper@other.org
 
 #No need to provide an IP address! This is handled by the agent
 docker run --name MSA-billgates.at.here.com --net emailnet-660046669 --detach \
---restart on-failure --publish 3000:8888 660046669/msa:latest billgates@here.com
+--restart on-failure \
+--publish 3000:8888 660046669/msa:latest billgates@here.com
 
 docker run --name MSA-alanturing.at.here.com --net emailnet-660046669 --detach \
---restart on-failure --publish 3001:8888 660046669/msa:latest alanturing@here.com
+--restart on-failure \
+--publish 3001:8888 660046669/msa:latest alanturing@here.com
 
 docker run --name MSA-stevejobs.at.there.com --net emailnet-660046669 --detach \
---restart on-failure --publish 3002:8888 660046669/msa:latest stevejobs@there.com
+--restart on-failure \
+--publish 3002:8888 660046669/msa:latest stevejobs@there.com
 
 docker run --name MSA-adalovelace.at.there.com --net emailnet-660046669 \
---restart on-failure --detach --publish 3003:8888 660046669/msa:latest adalovelace@there.com
+--restart on-failure --detach \
+--publish 3003:8888 660046669/msa:latest adalovelace@there.com
 
 docker run --name MSA-gracehopper.at.other.org --net emailnet-660046669 \
---restart on-failure --detach --publish 3004:8888 660046669/msa:latest gracehopper@other.org
+--restart on-failure --detach \
+--publish 3004:8888 660046669/msa:latest gracehopper@other.org
 
 # Here are some examples...
 
