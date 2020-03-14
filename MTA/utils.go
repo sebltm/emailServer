@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -73,7 +74,9 @@ func register(self Server) {
 
 		// if we couldn't register, panic!
 		if err != nil {
-			panic(err.Error())
+			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
+			continue
 		}
 
 		resp, err := http.Post("http://192.168.1.3:8888/bluebook/register",
@@ -82,10 +85,12 @@ func register(self Server) {
 		// if we couldn't register, log and loop again
 		if err != nil {
 			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		} else if resp.StatusCode > 299 {
 			log.Print("The bluebook service is unavailabe, or there was a" +
 				" problem while sending the request : " + resp.Status)
+			time.Sleep(2 * time.Second)
 			continue
 		}
 

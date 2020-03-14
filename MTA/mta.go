@@ -157,7 +157,12 @@ func MTAScanAndSend() {
 		responseMSA, err := http.Get(msaObj.Address + "email/outbox")
 
 		// couldn't get the mail from this outbox... log and move on to the next
-		if err != nil {
+		if responseMSA.StatusCode > 299 && err != nil {
+			// MSA busy or down, log and move on
+			log.Print("Couldn't reach MSA : " + responseMSA.Status)
+			continue
+		} else if err != nil {
+			// error occured, log and move on to the next
 			log.Print(err.Error())
 			continue
 		}
@@ -192,15 +197,10 @@ func MTAScanAndSend() {
 
 			address := msa[email.From].Address
 
-			if (blueBookResponse.StatusCode <= 400 ||
-				blueBookResponse.StatusCode >= 499) && err != nil {
-				// problem with the email we're sending so delete it
-				deleteEmail(address, email)
-				log.Print("Problem with email. Email has been deleted")
-				continue
-			} else if (blueBookResponse.StatusCode <= 500 ||
-				blueBookResponse.StatusCode >= 599) && err != nil {
-				// error occured while contacting BlueBook, retry later
+			if blueBookResponse.StatusCode > 299 {
+				// Default behaviour is: if we couldn't contact the BlueBook,
+				// or the domain does not exist, then just leave the message in the
+				// inbox
 				log.Println("Error while sending the request to the BlueBook ",
 					blueBookResponse.Status)
 				continue
@@ -235,32 +235,23 @@ func MTAScanAndSend() {
 			serverPath := destServer.Address + "email" + "/server"
 
 			// Finally, POST the email to the correct MTA !
-			req, err := http.NewRequest("POST", serverPath,
+			respMTA, err := http.Post(serverPath, "application/json",
 				bytes.NewReader(emailJSON))
-
-			if err != nil {
-				// error while creating the request, try again later
-				log.Println(err.Error())
-				return
-			}
-
-			client := &http.Client{}
-			resp, err := client.Do(req)
 
 			// Here we deal with the reponse from the desintation
 			// If it is unavailable, or there was an error with the request itself,
 			// leave the email in the outbox and deal with it later. For any other
 			// error, or if everything went okay, delete the email from the MSA's
 			// outbox
-			if (resp.StatusCode >= 500 && resp.StatusCode <= 599) && err == nil {
+			if err != nil {
+				log.Print(err.Error())
+			} else if respMTA.StatusCode >= 500 && respMTA.StatusCode <= 599 {
 				// the MTA is currently unavailable, exit here and come back later
-				log.Print("Destination MTA unavailable " + resp.Status +
+				log.Print("Destination MTA unavailable " + respMTA.Status +
 					", retry later")
 				return
-			} else if err == nil {
-				deleteEmail(address, email)
 			} else {
-				log.Print(err.Error())
+				deleteEmail(address, email)
 			}
 		}
 	}

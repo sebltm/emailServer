@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -59,10 +60,12 @@ func register(self Server) {
 		// client startup. log and loop again
 		if err != nil {
 			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		} else if responseBlueBook.StatusCode > 299 {
 			log.Print("The bluebook service is unavailabe, or there was a" +
 				" problem while sending the request : " + responseBlueBook.Status)
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
@@ -72,6 +75,7 @@ func register(self Server) {
 			// again, if we couldn't read the response from the bluebook, no point
 			// in starting up, so loop again
 			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
@@ -82,6 +86,7 @@ func register(self Server) {
 			// again, if we couldn't read the response from the bluebook, no point
 			// in starting up, so loop again
 			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
@@ -90,6 +95,7 @@ func register(self Server) {
 		if err != nil {
 			// If we can't create json string to describe this client, loop again
 			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
@@ -103,10 +109,12 @@ func register(self Server) {
 		// client startup. log and loop again
 		if err != nil {
 			log.Print(err.Error())
+			time.Sleep(2 * time.Second)
 			continue
 		} else if responseBlueBook.StatusCode > 299 {
 			log.Print("The bluebook service is unavailabe, or there was a" +
 				" problem while sending the request : " + respMTA.Status)
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
