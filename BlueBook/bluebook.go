@@ -47,6 +47,13 @@ func FindServer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	email := vars["email"]
 	emailSplit := strings.Split(email, "@")
+
+	if len(emailSplit) != 2 {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println("Email : " + email + " is invalid.")
+		return
+	}
+
 	_, domain := emailSplit[0], emailSplit[1]
 
 	log.Print("New request: " + domain)
@@ -83,12 +90,12 @@ func AddServer(w http.ResponseWriter, r *http.Request) {
 
 	// Read the body
 	body, err := ioutil.ReadAll(r.Body)
-	log.Print(string(body))
 
 	if err != nil {
 		log.Print(err.Error())
 		// Error while reading the body...
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if err := json.Unmarshal(body, &newServer); err == nil {

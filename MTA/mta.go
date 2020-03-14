@@ -197,7 +197,11 @@ func MTAScanAndSend() {
 
 			address := msa[email.From].Address
 
-			if blueBookResponse.StatusCode > 299 {
+			if blueBookResponse.StatusCode == 400 {
+				// Bad request, delete the offending email and move on to the next
+				deleteEmail(address, email)
+				continue
+			} else if blueBookResponse.StatusCode > 299 {
 				// Default behaviour is: if we couldn't contact the BlueBook,
 				// or the domain does not exist, then just leave the message in the
 				// inbox
