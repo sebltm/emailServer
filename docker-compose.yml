@@ -1,10 +1,11 @@
 # Run 'docker-compose up' to create all the services
 
-version: '3'
+version: '3.5'
 
 # Create a network named "emailnet-660046669" with IP range 192.168.1.0/24
 networks:
   emailnet-660046669:
+    name: emailnet-660046669
     driver: bridge
     ipam:
       driver: default
@@ -23,6 +24,7 @@ services:
       emailnet-660046669:
         ipv4_address: 192.168.1.3
     restart: on-failure
+    container_name: BlueBook
 
 # All the MSAs and MTAs have a "depends_on" to the Bluebook, not because the
 # containers actually need the Bluebook to run, but rather because we need the
@@ -34,6 +36,7 @@ services:
   msa-billgates:
     build: MSA/.
     image: 660046669/msa:latest
+    container_name: MSA-billgates.at.here.com
     ports:
       - "3000:8888"
     command: "billgates@here.com"
@@ -46,6 +49,7 @@ services:
   msa-alanturing:
     build: MSA/.
     image: 660046669/msa:latest
+    container_name: MSA-alanturing.at.here.com
     ports:
       - "3001:8888"
     command: "alanturing@here.com"
@@ -58,6 +62,7 @@ services:
   msa-stevejobs:
     build: MSA/.
     image: 660046669/msa:latest
+    container_name: MSA-stevejobs.at.there.com
     ports:
       - "3002:8888"
     command: "stevejobs@there.com"
@@ -70,6 +75,7 @@ services:
   msa-adalovelace:
     build: MSA/.
     image: 660046669/msa:latest
+    container_name: MSA-adalovelace.at.there.com
     ports:
       - "3003:8888"
     command: "adalovelace@there.com"
@@ -82,6 +88,7 @@ services:
   msa-gracehopper:
     build: MSA/.
     image: 660046669/msa:latest
+    container_name: MSA-gracehopper.at.other.org
     ports:
       - "3004:8888"
     command: "gracehopper@other.org"
@@ -95,6 +102,7 @@ services:
   mta-here:
     build: MTA/.
     image: 660046669/mta:latest
+    container_name: MTA-here.com
     ports:
       - "3005:8888"
     command: "here.com"
@@ -107,6 +115,7 @@ services:
   mta-there:
     build: MTA/.
     image: 660046669/mta:latest
+    container_name: MTA-there.com
     ports:
       - "3006:8888"
     command: "there.com"
@@ -119,6 +128,7 @@ services:
   mta-other:
     build: MTA/.
     image: 660046669/mta:latest
+    container_name: MTA-other.org
     ports:
       - "3007:8888"
     command: "other.org"
