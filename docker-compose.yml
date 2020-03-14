@@ -16,11 +16,13 @@ services:
 # Start the Bluebook with static IP 192.168.1.3
   bluebook:
     build: BlueBook/.
+    image: 660046669/bluebook:latest
     ports:
       - "3008:8888"
     networks:
       emailnet-660046669:
         ipv4_address: 192.168.1.3
+    restart: on-failure
 
 # All the MSAs and MTAs have a "depends_on" to the Bluebook, not because the
 # containers actually need the Bluebook to run, but rather because we need the
@@ -31,6 +33,7 @@ services:
 # Start the MSAs in any order, they will get an IP assigned to them
   msa-billgates:
     build: MSA/.
+    image: 660046669/msa:latest
     ports:
       - "3000:8888"
     command: "billgates@here.com"
@@ -38,9 +41,11 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
   msa-alanturing:
     build: MSA/.
+    image: 660046669/msa:latest
     ports:
       - "3001:8888"
     command: "alanturing@here.com"
@@ -48,9 +53,11 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
   msa-stevejobs:
     build: MSA/.
+    image: 660046669/msa:latest
     ports:
       - "3002:8888"
     command: "stevejobs@there.com"
@@ -58,9 +65,11 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
   msa-adalovelace:
     build: MSA/.
+    image: 660046669/msa:latest
     ports:
       - "3003:8888"
     command: "adalovelace@there.com"
@@ -68,9 +77,11 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
   msa-gracehopper:
     build: MSA/.
+    image: 660046669/msa:latest
     ports:
       - "3004:8888"
     command: "gracehopper@other.org"
@@ -78,10 +89,12 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
 # Start the MTAs in any order, they will get an IP assigned to them
   mta-here:
     build: MTA/.
+    image: 660046669/mta:latest
     ports:
       - "3005:8888"
     command: "here.com"
@@ -89,9 +102,11 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
   mta-there:
     build: MTA/.
+    image: 660046669/mta:latest
     ports:
       - "3006:8888"
     command: "there.com"
@@ -99,9 +114,11 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
 
   mta-other:
     build: MTA/.
+    image: 660046669/mta:latest
     ports:
       - "3007:8888"
     command: "other.org"
@@ -109,3 +126,20 @@ services:
       - emailnet-660046669
     depends_on:
       - bluebook
+    restart: on-failure
+
+# Here are some examples...
+
+# Sending an email:
+# curl -v --request POST 'http://localhost:3002/email' -d '{ "from": "stevejobs@there.com", "to": "billgates@here.com", "subject": "Successes and failures", "body": "Hey, remember Windows Phone? Me neither." }'
+
+# Reading the inbox:
+# curl -v --request GET 'http://localhost:3000/email'
+
+# Read one message in the inbox:
+# curl -v --request GET 'http://localhost:3000/email{uuid}
+# Find the UUID by first listing all messages in the inbox, and replace it in the URL
+
+# Delete a message in the inbox:
+# curl -v --request DELETE 'http://localhost:3000/email {uuid}
+# Find the UUID by first listing all messages in the inbox, and replace it in the URL

@@ -102,6 +102,11 @@ func MSASend(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Print(err.Error())
 		return
+	} else if email.From == "" || email.To == "" {
+		// Assume the email is badly formatted and exit
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println("From or To field empty.")
+		return
 	}
 
 	email.UUID = uuid
@@ -229,7 +234,13 @@ func MSAReadAll(folder int) func(w http.ResponseWriter, r *http.Request) {
 			var email EMail
 			if data, err := ioutil.ReadFile(path); err == nil {
 
-				json.Unmarshal(data, &email)
+				err = json.Unmarshal(data, &email)
+
+				if err != nil {
+					log.Println(err.Error())
+					continue
+				}
+
 				log.Printf("%+v\n", email)
 				folder.Emails = append(folder.Emails, email)
 			} else {

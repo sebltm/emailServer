@@ -197,16 +197,16 @@ func MTAScanAndSend() {
 				// problem with the email we're sending so delete it
 				deleteEmail(address, email)
 				log.Print("Problem with email. Email has been deleted")
-				return
+				continue
 			} else if (blueBookResponse.StatusCode <= 500 ||
 				blueBookResponse.StatusCode >= 599) && err != nil {
 				// error occured while contacting BlueBook, retry later
 				log.Println("Error while sending the request to the BlueBook ",
 					blueBookResponse.Status)
-				return
+				continue
 			} else if err != nil {
 				log.Println(err.Error())
-				return
+				continue
 			}
 
 			// Read the reponse and unmarshal into a Server struct
