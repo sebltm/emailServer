@@ -13,21 +13,15 @@ import (
 
 // EMail struct representing an email
 type EMail struct {
-	UUID     uuid.UUID
-	Sender   string
-	Receiver string
-	Subject  string
-	Message  string
+	UUID    uuid.UUID
+	From    string
+	To      string
+	Subject string
+	Body    string
 }
 
 // Server struct representing an MTA server
 type Server struct {
-	Name    string
-	Address string
-}
-
-// MSA struct representing an MSA client
-type MSA struct {
 	Name    string
 	Address string
 }
@@ -38,7 +32,7 @@ type Folder struct {
 }
 
 // MSA clients registered with this MTA server
-var msa map[string]MSA
+var msa map[string]Server
 
 // This MTA server
 var self Server
@@ -98,26 +92,5 @@ func register(self Server) {
 		// Finally registered ! Log and break out of the loop
 		registered = true
 		log.Print("Registered!")
-	}
-}
-
-func deleteEmail(address string, email EMail) {
-	client := &http.Client{}
-
-	// send a request to delete the email
-	deleteReq, err := http.NewRequest("DELETE",
-		address+"email/outbox/"+email.UUID.String(), nil)
-
-	// if there was a problem while creating the request, log the error and exit
-	if err != nil {
-		log.Print(err.Error())
-		return
-	}
-
-	_, err = client.Do(deleteReq)
-
-	if err != nil {
-		log.Fatal(err.Error())
-		return
 	}
 }

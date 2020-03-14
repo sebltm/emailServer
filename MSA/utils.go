@@ -20,21 +20,15 @@ const OUTBOX = 1
 
 // EMail struct representing an email
 type EMail struct {
-	UUID     uuid.UUID
-	Sender   string
-	Receiver string
-	Subject  string
-	Message  string
+	UUID    uuid.UUID
+	From    string
+	To      string
+	Subject string
+	Body    string
 }
 
 // Server struct representing an MTA server
 type Server struct {
-	Name    string
-	Address string
-}
-
-// MSA struct representing an MSA client
-type MSA struct {
 	Name    string
 	Address string
 }
@@ -45,13 +39,13 @@ type Folder struct {
 }
 
 // This MSA
-var self MSA
+var self Server
 
 // register itself as an active MSA client to the MTA server handling the
 // emailSplit for this particular SLD domain. All errors in this function are
 // handled as fatal, since otherwise the MSA client won't be able to register
 // with its MTA server
-func register(self MSA) {
+func register(self Server) {
 	registered := false
 
 	for !registered {

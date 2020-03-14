@@ -54,13 +54,16 @@ func handleRequests() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/email", MSASend).Methods("POST")
-	router.HandleFunc("/email/receive", MSAReceive).Methods("POST")
-	router.HandleFunc("/email/inbox", MSAReadAll(INBOX)).Methods("GET")
+	// MTA 'service' methods
+	router.HandleFunc("/email/outbox", MSAReceive).Methods("POST")
 	router.HandleFunc("/email/outbox", MSAReadAll(OUTBOX)).Methods("GET")
-	router.HandleFunc("/email/inbox/{uuid}", MSARead).Methods("GET")
-	router.HandleFunc("/email/inbox/{uuid}", MSADelete(INBOX)).Methods("DELETE")
 	router.HandleFunc("/email/outbox/{uuid}", MSADelete(OUTBOX)).Methods("DELETE")
+
+	// Client methods
+	router.HandleFunc("/email", MSASend).Methods("POST")
+	router.HandleFunc("/email", MSAReadAll(INBOX)).Methods("GET")
+	router.HandleFunc("/email/{uuid}", MSARead).Methods("GET")
+	router.HandleFunc("/email/{uuid}", MSADelete(INBOX)).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8888", router))
 }
@@ -181,6 +184,8 @@ func MSAReceive(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
+
+	log.Println("Received an email : " + email.Subject + " from : " + email.From)
 }
 
 // MSAReadAll gets called from the handleRequests method
@@ -203,6 +208,9 @@ func MSAReadAll(folder int) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// DEBUG:
+		log.Println("Read all in " + rootpath)
+
 		// Read a list of all files in the directory
 		files, err := ioutil.ReadDir(rootpath)
 		log.Printf("There's %d email in %s", len(files), rootpath)
@@ -214,8 +222,10 @@ func MSAReadAll(folder int) func(w http.ResponseWriter, r *http.Request) {
 
 		// Put all the emails in a struct, to be formatted in JSON
 		var folder Folder
+
 		for _, file := range files {
 			path := filepath.Join(rootpath, file.Name())
+			fmt.Println(path)
 			var email EMail
 			if data, err := ioutil.ReadFile(path); err == nil {
 
@@ -276,8 +286,7 @@ func MSARead(w http.ResponseWriter, r *http.Request) {
 		// Send email data back to user
 		w.WriteHeader(http.StatusOK)
 		w.Write(data)
-
-	} else {
+	} else if err != nil {
 		log.Print(err.Error())
 
 		if os.IsNotExist(err) {

@@ -49,13 +49,13 @@ func FindServer(w http.ResponseWriter, r *http.Request) {
 	emailSplit := strings.Split(email, "@")
 	_, domain := emailSplit[0], emailSplit[1]
 
-	log.Print("New request:" + domain)
+	log.Print("New request: " + domain)
 
 	server, ok := servers[domain]
 
 	// Log whether the requests matches or not
 	if ok {
-		log.Print("Request matches:"+server.Name, server.Address)
+		log.Print("Request matches: " + server.Name + " @ " + server.Address)
 	} else {
 
 		// If there's no match, send a 404

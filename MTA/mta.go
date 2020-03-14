@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	msa = make(map[string]MSA)
+	msa = make(map[string]Server)
 
 	if len(os.Args) < 2 {
 		fmt.Println("To run the MTA service, please provide a domain name.")
@@ -63,7 +63,7 @@ func main() {
 func handleRequests() {
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/email/server/", MTAServe).Methods("POST")
+	router.HandleFunc("/email/server", MTAServe).Methods("POST")
 	router.HandleFunc("/email/server/register", AddMSA).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8888", router))
@@ -72,7 +72,7 @@ func handleRequests() {
 // AddMSA adds a new MSA to the list of clients, with the name and
 // corresponding address of the client
 func AddMSA(w http.ResponseWriter, r *http.Request) {
-	var newMSA MSA
+	var newMSA Server
 
 	body, err := ioutil.ReadAll(r.Body)
 
@@ -121,18 +121,18 @@ func MTAServe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find the address of the MSA client
-	recipient := msa[email.Receiver]
+	recipient := msa[email.To]
 
 	// Re-marshal the email
 	emailJSON, err := json.Marshal(email)
 
 	// Forward to the MSA
-	resp, err := http.Post(recipient.Address+"email/receive", "application/json",
+	resp, err := http.Post(recipient.Address+"email/outbox", "application/json",
 		bytes.NewReader(emailJSON))
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 && err == nil {
 		w.WriteHeader(http.StatusOK)
-		log.Printf("Delivered email %s to %s", email.Subject, email.Receiver)
+		log.Printf("Delivered email %s to %s", email.Subject, email.To)
 	} else if (resp.StatusCode < 200 || resp.StatusCode > 299) && err != nil {
 		// forward the error to the MTA
 		w.WriteHeader(resp.StatusCode)
@@ -153,7 +153,7 @@ func MTAScanAndSend() {
 
 	// iterate over all the MSAs registered with this MTA
 	for _, msaObj := range msa {
-		log.Print("Scan and serve: " + msaObj.Address + "(" + msaObj.Name + ")")
+		log.Print("Scan and serve: " + msaObj.Address + " (" + msaObj.Name + ")")
 		responseMSA, err := http.Get(msaObj.Address + "email/outbox")
 
 		// couldn't get the mail from this outbox... log and move on to the next
@@ -187,10 +187,10 @@ func MTAScanAndSend() {
 			log.Println("Sending " + email.Subject)
 
 			// Ask the bluebook who this email should go to
-			blueBookRequest := "http://192.168.1.3:8888/bluebook/" + email.Receiver
+			blueBookRequest := "http://192.168.1.3:8888/bluebook/" + email.To
 			blueBookResponse, err := http.Get(blueBookRequest)
 
-			address := msa[email.Sender].Address
+			address := msa[email.From].Address
 
 			if (blueBookResponse.StatusCode <= 400 ||
 				blueBookResponse.StatusCode >= 499) && err != nil {
@@ -232,7 +232,7 @@ func MTAScanAndSend() {
 				return
 			}
 
-			serverPath := destServer.Address + "email" + "/server/"
+			serverPath := destServer.Address + "email" + "/server"
 
 			// Finally, POST the email to the correct MTA !
 			req, err := http.NewRequest("POST", serverPath,
@@ -264,4 +264,29 @@ func MTAScanAndSend() {
 			}
 		}
 	}
+}
+
+func deleteEmail(address string, email EMail) {
+	client := &http.Client{}
+
+	// send a request to delete the email
+	deleteReq, err := http.NewRequest("DELETE",
+		address+"email/outbox/"+email.UUID.String(), nil)
+
+	// if there was a problem while creating the request, log the error and exit
+	if err != nil {
+		log.Print(err.Error())
+		return
+	}
+
+	resp, err := client.Do(deleteReq)
+
+	if (resp.StatusCode > 299) && err == nil {
+		// the MTA is currently unavailable, exit here and come back later
+		log.Print("Could not delete email " + resp.Status + ", retry later")
+		return
+	} else if err != nil {
+		log.Print(err.Error())
+	}
+
 }
